@@ -1,0 +1,934 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="description" content="Desafio da Veri: missão interativa sobre o caminho do dado na Atenção Primária. Gestão na Saúde · Verineida Lima.">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Desafio da Veri</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;700;800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap">
+<style>
+/* Layout: faixa azul-marinho de marca no topo, tabuleiro de 6 estações, painel da etapa, mural coletivo e chamada do workshop */
+:root{
+  --navy:#0a0e78; --navy-2:#141a9a; --gold:#ffcc00; --blue:#2f6fe0; --cream:#fff4c8;
+  --bg:#f3f4fb; --card:#ffffff; --fg:#12143a; --muted:#585c86; --line:#dcdff0;
+  --ok:#14804a; --ok-bg:#e3f5ea; --bad:#b3261e; --bad-bg:#fbe6e4; --lock:#9a9db8;
+  --on-navy:#ffffff; --ink-on-gold:#0a0e78;
+  --f-display:"Poppins",system-ui,sans-serif; --f-body:"DM Sans",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#070a3d; --card:#10155a; --fg:#eef0ff; --muted:#a9addb; --line:#262c7a;
+  --ok:#5fd394; --ok-bg:#0f3a2b; --bad:#ff8a80; --bad-bg:#4a1720; --lock:#6a6fa8; --cream:#2a2a1a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#070a3d; --card:#10155a; --fg:#eef0ff; --muted:#a9addb; --line:#262c7a;
+  --ok:#5fd394; --ok-bg:#0f3a2b; --bad:#ff8a80; --bad-bg:#4a1720; --lock:#6a6fa8; --cream:#2a2a1a; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.55}
+.wrap{max-width:820px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.1}
+.eyebrow{font-family:var(--f-display);font-weight:700;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--gold)}
+header{background:var(--navy);color:var(--on-navy)}
+header .wrap{padding-block:32px 28px;display:grid;gap:14px}
+header h1{font-size:clamp(38px,9vw,64px);font-weight:800;letter-spacing:-.02em;text-transform:uppercase}
+header p{margin:0;max-width:58ch;color:#d9dcff}
+.who{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:6px}
+.who input{flex:1 1 220px;min-width:0;font:inherit;padding:12px 14px;border-radius:12px;border:2px solid transparent;background:#fff;color:#12143a}
+.who input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+.btn{font-family:var(--f-display);font-weight:700;font-size:15px;border:0;border-radius:12px;padding:12px 18px;cursor:pointer;background:var(--gold);color:var(--ink-on-gold);letter-spacing:.02em}
+.btn:hover{filter:brightness(1.05)}
+.btn:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.btn.ghost{background:transparent;color:var(--fg);border:2px solid var(--line)}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+.badge{display:flex;gap:14px;align-items:center;flex-wrap:wrap;background:var(--navy-2);border-radius:14px;padding:12px 16px}
+.badge b{font-family:var(--f-display);font-size:18px}
+.pts{font-family:var(--f-display);font-weight:800;color:var(--ink-on-gold);background:var(--gold);border-radius:999px;padding:4px 12px;font-variant-numeric:tabular-nums}
+.rank{color:#d9dcff;font-size:14px}
+.link{background:none;border:0;color:#d9dcff;text-decoration:underline;cursor:pointer;font:inherit;font-size:13px;padding:0;margin-left:auto}
+
+main{display:grid;gap:28px;padding-block:28px 48px}
+.board{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px 18px}
+.board-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.board-top h2{font-size:20px}
+.board-top span{color:var(--muted);font-size:14px}
+.track{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(6,1fr);gap:8px;position:relative}
+.track::before{content:"";position:absolute;left:8%;right:8%;top:24px;border-top:3px dashed var(--line)}
+.station{position:relative;display:grid;justify-items:center;gap:6px;text-align:center}
+.station button{width:50px;height:50px;border-radius:50%;border:3px solid var(--card);font-family:var(--f-display);font-weight:800;font-size:18px;cursor:pointer;background:var(--lock);color:#fff;position:relative;z-index:1}
+.station.open button{background:var(--blue)}
+.station.done button{background:var(--gold);color:var(--ink-on-gold)}
+.station.active button{box-shadow:0 0 0 4px var(--blue)}
+.station button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
+.station .day{font-family:var(--f-display);font-weight:700;font-size:11px;letter-spacing:.08em;color:var(--blue);text-transform:uppercase}
+.station.done .day{color:var(--muted)}
+.station .nm{font-size:12.5px;line-height:1.25;color:var(--muted)}
+.token{position:absolute;top:-10px;right:calc(50% - 34px);z-index:2;width:22px;height:22px;border-radius:6px;background:var(--gold);color:var(--ink-on-gold);font:800 12px var(--f-display);display:grid;place-items:center;transform:rotate(12deg);box-shadow:0 2px 6px rgba(0,0,0,.25)}
+@media (max-width:560px){
+  .track{grid-template-columns:repeat(3,1fr);row-gap:20px}
+  .track::before{display:none}
+}
+
+.panel{background:var(--card);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.panel-head{background:var(--navy);color:var(--on-navy);padding:20px 22px;display:grid;gap:6px}
+.panel-head h2{font-size:24px}
+.panel-body{padding:22px;display:grid;gap:18px}
+.panel-body p{margin:0;max-width:65ch}
+.lockbox{display:grid;gap:12px;background:var(--cream);border-radius:14px;padding:18px}
+.lockbox h3{font-size:17px}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row input{flex:1 1 180px;min-width:0;font:inherit;padding:12px 14px;border-radius:12px;border:2px solid var(--line);background:var(--card);color:var(--fg);text-transform:uppercase;letter-spacing:.1em}
+.row input:focus-visible{outline:3px solid var(--blue);outline-offset:1px}
+.msg{font-size:14px;margin:0}
+.msg.err{color:var(--bad)} .msg.good{color:var(--ok)}
+.case{border-left:4px solid var(--gold);padding:4px 0 4px 14px;color:var(--fg)}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.fact{border:1px solid var(--line);border-radius:12px;padding:12px}
+.fact small{display:block;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.fact b{font-family:var(--f-display);font-size:20px;font-variant-numeric:tabular-nums}
+
+.ficha{border:2px solid var(--line);border-radius:14px;overflow:hidden}
+.ficha-h{background:var(--line);padding:10px 14px;font:700 13px var(--f-display);letter-spacing:.06em;text-transform:uppercase;display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.field{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.4fr);gap:10px;align-items:center;width:100%;text-align:left;font:inherit;color:var(--fg);background:var(--card);border:0;border-top:1px solid var(--line);padding:12px 14px;cursor:pointer}
+.field:first-of-type{border-top:0}
+.field small{color:var(--muted);font-size:13px}
+.field .v{font-family:ui-monospace,Menlo,monospace;font-size:14px;word-break:break-word}
+.field.sel{background:var(--cream);box-shadow:inset 4px 0 0 var(--gold)}
+.field.right{background:var(--ok-bg);box-shadow:inset 4px 0 0 var(--ok)}
+.field.wrong{background:var(--bad-bg);box-shadow:inset 4px 0 0 var(--bad)}
+.field:focus-visible{outline:3px solid var(--blue);outline-offset:-3px}
+.why{grid-column:1/-1;font-size:13.5px;color:var(--fg)}
+
+.pront{border:1px solid var(--line);border-radius:14px;overflow:hidden;background:var(--card)}
+.pront-h{background:var(--cream);padding:10px 14px;font:700 13px var(--f-display);letter-spacing:.06em;text-transform:uppercase}
+.pront-i{padding:12px 14px;border-top:1px solid var(--line);display:grid;gap:2px}
+.pront-i b{font-family:var(--f-display);font-size:13px;color:var(--blue)}
+.pront-i p{margin:0;font-size:15px}
+.order{display:grid;gap:8px}
+.chip{display:flex;align-items:center;gap:12px;width:100%;text-align:left;font:inherit;color:var(--fg);background:var(--card);border:2px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer}
+.chip .n{flex:none;width:28px;height:28px;border-radius:50%;display:grid;place-items:center;background:var(--line);font:800 14px var(--f-display)}
+.chip.picked .n{background:var(--blue);color:#fff}
+.chip.ok{border-color:var(--ok)} .chip.ok .n{background:var(--ok);color:#fff}
+.chip.no{border-color:var(--bad)}
+.chip:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+
+.table-scroll{overflow-x:auto;border:1px solid var(--line);border-radius:12px}
+table{border-collapse:collapse;width:100%;min-width:520px;font-size:14px}
+th,td{padding:10px 12px;text-align:left;border-bottom:1px solid var(--line)}
+th{font:700 12px var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+td.mono{font-family:ui-monospace,Menlo,monospace;font-variant-numeric:tabular-nums}
+.st{display:inline-block;font:700 12px var(--f-display);padding:3px 10px;border-radius:999px}
+.st.a{background:var(--ok-bg);color:var(--ok)} .st.r{background:var(--bad-bg);color:var(--bad)}
+tr.hl td{background:var(--cream)}
+
+.q{display:grid;gap:8px}
+.q h3{font-size:16px;font-family:var(--f-body);font-weight:700}
+.opt{display:block;width:100%;text-align:left;font:inherit;color:var(--fg);background:var(--card);border:2px solid var(--line);border-radius:12px;padding:12px 14px;cursor:pointer}
+.opt:hover{border-color:var(--blue)}
+.opt.ok{border-color:var(--ok);background:var(--ok-bg)}
+.opt.no{border-color:var(--bad);background:var(--bad-bg)}
+.opt:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.feedback{border-radius:12px;padding:14px;background:var(--ok-bg);color:var(--fg)}
+.feedback.bad{background:var(--bad-bg)}
+.done-tag{display:inline-flex;gap:8px;align-items:center;font:700 14px var(--f-display);color:var(--ok)}
+
+.mutirao{display:grid;gap:10px;border:2px dashed var(--blue);border-radius:14px;padding:16px}
+.mutirao h3{font-size:16px}
+.bar{height:14px;border-radius:999px;background:var(--line);overflow:hidden}
+.bar i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--gold));border-radius:999px}
+.bar-l{display:flex;justify-content:space-between;font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+.cert{background:var(--navy);color:var(--on-navy);border-radius:18px;padding:26px 22px;display:grid;gap:10px;text-align:center;border:3px solid var(--gold)}
+.cert .eyebrow{justify-self:center}
+.cert h3{font-size:clamp(24px,6vw,34px);font-weight:800}
+.cert p{margin:0 auto;color:#d9dcff;max-width:44ch}
+.cert .pts{justify-self:center;font-size:18px}
+
+.mural{display:grid;gap:14px}
+.mural h2{font-size:20px}
+.mural-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.mcard{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;display:grid;gap:8px;align-content:start}
+.mcard small{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.08em;font-weight:700}
+.mcard p{margin:0;font-size:14.5px}
+.vote{display:grid;gap:6px}
+.vote div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;font-size:14px}
+.vote .bar{height:8px;grid-column:1/-1}
+
+.ws{background:var(--navy);color:var(--on-navy);border-radius:20px;padding:24px 22px;display:grid;gap:14px}
+.ws h2{font-size:clamp(26px,6vw,36px);font-weight:800;text-transform:uppercase}
+.steps3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.steps3 div{display:grid;gap:2px;font-size:14px;color:#d9dcff}
+.steps3 b{font-family:var(--f-display);color:var(--gold);font-size:12px;letter-spacing:.06em}
+.ws-meta{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;color:#d9dcff}
+.ws .cta{background:var(--gold);color:var(--ink-on-gold);border-radius:12px;padding:14px 16px;font:800 15px var(--f-display);text-align:center;letter-spacing:.04em}
+@media (max-width:560px){.steps3{grid-template-columns:1fr}}
+footer{color:var(--muted);font-size:13px;text-align:center;padding-bottom:32px}
+@media (prefers-reduced-motion:no-preference){.token{transition:transform .3s}.panel{animation:rise .35s ease-out}@keyframes rise{from{transform:translateY(6px)}to{transform:none}}}
+
+/* tabuleiro lúdico */
+.board-tip{margin:-6px 0 14px;color:var(--muted);font-size:14px}
+.board-frame{max-width:520px;margin:0 auto;border-radius:22px;border:4px solid var(--gold);box-shadow:0 10px 0 var(--navy-2);overflow:hidden;background:#0a0e78}
+#tab{display:block;width:100%;height:auto}
+#tab text{font-family:var(--f-display)}
+.t-day{font-size:9.5px;font-weight:700;letter-spacing:.08em;fill:#ffcc00}
+.t-nm{font-size:13px;font-weight:700;fill:#fff}
+.t-pl{font-size:10.5px;font-weight:500;fill:#b9bdf5}
+.t-num{font-size:24px;font-weight:800;fill:#fff}
+.t-q{font-size:15px;font-weight:800;fill:#0a0e78;pointer-events:none}
+.t-pawn{font-size:11px;font-weight:800;fill:#0a0e78}
+.plaque{fill:#141a9a;stroke:#2a32b8;stroke-width:1}
+.stn,.curio{cursor:pointer;outline:none}
+.stn .halo{fill:none}
+.stn .disk{fill:#6a6fa8}
+.stn .ring{fill:none;stroke:#ffffff;stroke-opacity:.35;stroke-width:2;stroke-dasharray:4 4}
+.stn .glyph{color:#fff}
+.stn.open .disk{fill:#2f6fe0}
+.stn.open .ring{stroke-opacity:.9}
+.stn.done .disk{fill:#ffcc00}
+.stn.done .glyph{color:#0a0e78}
+.stn.now .halo{fill:#ffcc00;fill-opacity:.25}
+.stn:focus-visible .halo,.curio:focus-visible circle{stroke:#ffcc00;stroke-width:3;fill-opacity:.3}
+#pawn{transition:transform .7s cubic-bezier(.3,1.4,.5,1)}
+@media (prefers-reduced-motion:no-preference){
+  .stn.now .halo{animation:pulse 1.6s ease-in-out infinite;transform-origin:center}
+  @keyframes pulse{50%{fill-opacity:.05}}
+  #pawn > path{animation:bob 1.8s ease-in-out infinite}
+  @keyframes bob{50%{transform:translateY(-3px)}}
+}
+.legend{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 18px;margin-top:16px;font-size:13px;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.lg{width:14px;height:14px;border-radius:50%;display:inline-block}
+.lg.open{background:#2f6fe0}.lg.locked{background:#6a6fa8}.lg.done{background:#ffcc00}
+.lg.pawn{background:#ffcc00;border-radius:50% 50% 4px 4px;border:2px solid var(--navy)}
+.sheet{display:block;scroll-margin-top:12px}
+.sheet[hidden],.toast[hidden]{display:none}
+.sheet-card{position:relative;background:var(--bg);border:3px solid var(--gold);border-radius:22px;padding:12px;display:grid;gap:12px}
+.sheet .panel{animation:none}
+.x{position:sticky;top:0;justify-self:end;z-index:2;width:40px;height:40px;border-radius:50%;border:0;background:var(--gold);color:var(--ink-on-gold);font:800 24px/1 var(--f-display);cursor:pointer;margin-bottom:-52px;position:absolute;top:22px;right:22px}
+.x:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.back{justify-self:center}
+
+@media (prefers-reduced-motion:no-preference){.sheet-card{animation:up .3s ease-out}@keyframes up{from{transform:translateY(30px)}to{transform:none}}}
+.toast{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(20px + env(safe-area-inset-bottom,0px));z-index:30;width:min(440px,calc(100% - 32px));background:var(--gold);color:var(--ink-on-gold);border-radius:14px;padding:14px 16px;font-weight:500;box-shadow:0 8px 24px rgba(0,0,0,.3)}
+
+.cdisk{fill:#ffcc00}
+.curio.sleep .cdisk{fill:#6a6fa8}
+.curio.sleep .t-q{fill:#d0d2f0}
+.curio.found .cdisk{fill:#ffffff;stroke:#ffcc00;stroke-width:3}
+.mtop{display:flex;justify-content:space-between;align-items:center;gap:12px;font:700 12px var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.vidas{display:inline-flex;gap:6px}
+.vidas i{width:16px;height:16px;border-radius:50%;border:2px solid var(--gold);display:inline-block}
+.vidas i.on{background:var(--gold)}
+.opt.pick{border-color:var(--blue);box-shadow:inset 4px 0 0 var(--blue)}
+.stamp{display:grid;gap:4px;border-radius:14px;padding:16px 18px;border:3px solid}
+.stamp b{font:800 20px var(--f-display);text-transform:uppercase;letter-spacing:.04em}
+.stamp span{font-size:15px}
+.stamp.win{border-color:var(--ok);background:var(--ok-bg)} .stamp.win b{color:var(--ok)}
+.stamp.fail{border-color:var(--bad);background:var(--bad-bg)} .stamp.fail b{color:var(--bad)}
+.stamp.try{border-color:var(--gold);background:var(--cream)} .stamp.try b{color:var(--fg)}
+@media (prefers-reduced-motion:no-preference){
+  .stamp.try{animation:shake .45s}
+  @keyframes shake{20%{transform:translateX(-8px)}40%{transform:translateX(7px)}60%{transform:translateX(-5px)}80%{transform:translateX(3px)}}
+  .stamp.win,.stamp.fail{animation:pop .4s cubic-bezier(.3,1.6,.5,1)}
+  @keyframes pop{from{transform:scale(.85) rotate(-2deg)}to{transform:none}}
+}
+
+/* vídeo do atendimento */
+.video{display:grid;gap:8px}
+.vstage{position:relative;border-radius:16px;overflow:hidden;border:3px solid #0a0e78;background:#e4ecff}
+.vsvg{display:block;width:100%;height:auto}
+.vt{font-family:var(--f-body);fill:#12143a}
+.vt.mono{font-family:ui-monospace,Menlo,monospace}
+.scn{display:none}.scn.on{display:inline}
+.v-cam2,.v-cam3,.v-cartao,.v-anda,.v-seringa,.v-digita,.v-balao{transform-box:view-box}
+.v-cam2{transform-origin:0 0}.v-cam3{transform-origin:278px 88px}
+.scn.on .v-anda{animation:vAnda 6.5s ease-out both}
+@keyframes vAnda{0%{transform:translateX(-200px)}32%,100%{transform:translateX(30px)}}
+.scn.on .v-cartao{animation:vCartao 6.5s both}
+@keyframes vCartao{0%,40%{opacity:0;transform:scale(.7)}50%,100%{opacity:1;transform:none}}
+.v-cartao{transform-origin:180px 110px}
+.scn.on .v-seringa{animation:vSer 6.5s ease-in-out both}
+@keyframes vSer{0%,18%{transform:translateX(-4px)}34%,52%{transform:translateX(5px)}66%,100%{transform:translateX(-6px)}}
+.scn.on .v-balao{animation:vBalao 6.5s both}
+@keyframes vBalao{0%,60%{opacity:0}66%,100%{opacity:1}}
+.scn.on .v-cam2{animation:vCam2 6.5s ease-in-out both}
+@keyframes vCam2{0%,45%{transform:none}58%,100%{transform:translate(-449px,-176px) scale(2.6)}}
+.scn.on .v-cam3{animation:vCam3 7.5s ease-in-out both}
+@keyframes vCam3{0%,50%{transform:none}64%,100%{transform:scale(1.9)}}
+.scn.on .v-digita{animation:vDig .28s ease-in-out infinite alternate}
+@keyframes vDig{to{transform:translateY(-2px)}}
+.scn.on .v-linhas{animation:vLin 7.5s steps(4) both}
+@keyframes vLin{0%{opacity:.2}40%,100%{opacity:1}}
+.video.paused .vstage *{animation-play-state:paused!important}
+.vhora{position:absolute;left:10px;top:10px;background:#0a0e78;color:#ffcc00;font:700 12px var(--f-display);letter-spacing:.06em;padding:5px 10px;border-radius:999px}
+.vleg{position:absolute;left:10px;right:10px;bottom:10px;margin:0;background:rgba(10,14,120,.88);color:#fff;font-size:14px;line-height:1.35;padding:8px 12px;border-radius:10px;text-align:center}
+.vplay{position:absolute;inset:0;display:none;place-items:center;align-content:center;gap:10px;border:0;cursor:pointer;background:rgba(10,14,120,.5);color:#fff;font:inherit}
+.video.poster .vplay{display:grid}
+.video.poster .vleg,.video.poster .vhora{display:none}
+.vplay .tri{width:64px;height:64px;border-radius:50%;background:#ffcc00;position:relative;box-shadow:0 6px 18px rgba(0,0,0,.35)}
+.vplay .tri::after{content:"";position:absolute;left:26px;top:20px;border-left:18px solid #0a0e78;border-top:12px solid transparent;border-bottom:12px solid transparent}
+.vplay b{font-family:var(--f-display);font-size:16px}
+.vplay:focus-visible{outline:4px solid #ffcc00;outline-offset:-6px}
+.vctrl{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.vpp{font:700 13px var(--f-display);border:0;border-radius:999px;padding:8px 14px;background:var(--gold);color:var(--ink-on-gold);cursor:pointer}
+.vchips{display:flex;flex-wrap:wrap;gap:6px}
+.vchips button{font:600 12.5px var(--f-body);border:1.5px solid var(--line);background:var(--card);color:var(--fg);border-radius:999px;padding:6px 11px;cursor:pointer}
+.vchips button.on{border-color:var(--blue);background:var(--blue);color:#fff}
+.vpp:focus-visible,.vchips button:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+@media (max-width:480px){.vleg{font-size:12.5px;padding:6px 10px}.vhora{font-size:11px}}
+
+.opina{display:grid;gap:16px;border:2px solid var(--gold);border-radius:16px;padding:18px;background:var(--card)}
+.opina h3{font-size:19px}
+.opina .lbl{font-weight:700;font-size:15px}
+.opina textarea,.opina input{font:inherit;width:100%;padding:12px 14px;border-radius:12px;border:2px solid var(--line);background:var(--bg);color:var(--fg);resize:vertical}
+.opina textarea:focus-visible,.opina input:focus-visible{outline:3px solid var(--blue);outline-offset:1px}
+.notas{display:flex;gap:8px;flex-wrap:wrap}
+.nota{width:46px;height:46px;border-radius:12px;border:2px solid var(--gold);background:transparent;color:var(--fg);font:800 18px var(--f-display);cursor:pointer}
+.nota.on{background:var(--gold);color:var(--ink-on-gold)}
+.proxs{display:flex;flex-wrap:wrap;gap:8px}
+.pchip{font:600 14px var(--f-body);border:2px solid var(--line);background:var(--card);color:var(--fg);border-radius:999px;padding:8px 14px;cursor:pointer}
+.pchip.on{border-color:var(--blue);background:var(--blue);color:#fff}
+.nota:focus-visible,.pchip:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.msgbox{margin:0;white-space:pre-wrap;word-break:break-word;font:14px/1.5 ui-monospace,Menlo,monospace;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:12px 14px;user-select:all}
+a.btn{text-decoration:none;display:inline-block}
+
+.restaura{color:#d9dcff;font-size:14px}
+.restaura summary{cursor:pointer;text-decoration:underline;margin-top:4px}
+.restaura .who{margin-top:10px}
+.salvabox{display:grid;gap:10px;background:var(--navy-2);border-radius:14px;padding:14px 16px;color:#d9dcff;font-size:14px}
+.salvabox p{margin:0}
+.salvabox .msgbox{background:#0a0e78;color:#fff;border-color:#2a32b8;font-size:12px;max-height:120px;overflow:auto}
+.salvabox .msg{color:#ffcc00}
+
+.inscr{display:grid;gap:10px;background:var(--gold);color:var(--ink-on-gold);border-radius:14px;padding:14px 16px;margin-top:10px}
+.inscr p{margin:0;color:var(--ink-on-gold)}
+.inscr .btn{background:var(--navy);color:#fff;justify-self:start}
+.lgpd{flex-basis:100%;margin:0;font-size:12.5px;color:#c9ccf5;line-height:1.4}
+</style>
+</head>
+<body>
+
+
+<header>
+  <div class="wrap">
+    <div class="eyebrow">Desafio da Veri · Temporada 1 · Missão da semana</div>
+    <h1>O Caminho do Dado</h1>
+    <p>Você foi contratado(a) pela Secretaria de Saúde de Santa Esperança do Sertão. Um atendimento sumiu do sistema e só você pode descobrir onde ele se perdeu. Uma estação nova abre por dia, com o código revelado nos Stories.</p>
+    <div id="who"></div>
+  </div>
+</header>
+
+<div class="wrap">
+<main>
+  <section class="board" aria-labelledby="tab-t">
+    <div class="board-top"><h2 id="tab-t">Tabuleiro de Santa Esperança</h2><span id="prog"></span></div>
+    <p class="board-tip">Toque numa casa grande para abrir a missão. As casas com <b>?</b> escondem pistas: elas acordam junto com cada missão. A primeira pista do dia sai nos Stories; as outras você caça aqui.</p>
+    <div class="board-frame"><svg id="tab" viewBox="0 0 360 800" role="group" aria-label="Tabuleiro da missão"></svg></div>
+    <div class="legend"><span><i class="lg open"></i>Aberta</span><span><i class="lg locked"></i>Bloqueada</span><span><i class="lg done"></i>Concluída</span><span><i class="lg pawn"></i>Seu peão</span></div>
+  </section>
+
+<div class="sheet" id="sheet" hidden>
+    <div class="sheet-card" role="dialog" aria-modal="true" aria-label="Missão">
+    <button class="x" id="fechar" type="button" aria-label="Voltar ao tabuleiro">×</button>
+    <section class="panel" id="panel" aria-live="polite"></section>
+    <button class="btn back" id="voltar" type="button">Voltar ao tabuleiro</button>
+  </div>
+</div>
+  <section class="mural" aria-labelledby="mural-t">
+    <h2 id="mural-t">Mural do mutirão</h2>
+    <div class="mural-grid" id="mural"></div>
+  </section>
+
+  <section class="ws" aria-labelledby="ws-t">
+    <div class="eyebrow">Workshop APS · 6ª edição</div>
+    <h2 id="ws-t">Agora siga o dado de verdade</h2>
+    <div class="steps3">
+      <div><b>TER · 10/11</b>O dado saindo do município</div>
+      <div><b>QUA · 11/11</b>O dado sendo avaliado pelo Ministério</div>
+      <div><b>QUI · 12/11</b>O dado chegando à RNDS</div>
+    </div>
+    <div class="ws-meta"><span>19h às 21h</span><span>Online, pelo Meet</span><span>Certificado de 20h</span><span>Com Verineida Lima, Mestre em Ensino na Saúde</span></div>
+    <div class="cta">Inscrições pelo link na bio</div>
+  </section>
+</main>
+<div class="toast" id="toast" role="status" hidden></div>
+<footer>Gestão na Saúde · Verineida Lima. Santa Esperança do Sertão, Dona Francisca e todos os dados desta missão são fictícios. Seu progresso fica salvo neste celular ou navegador.</footer>
+</div>
+
+<script>
+/* ===== Mural: atualizado pela Verineida a cada dia ===== */
+const MURAL = {
+  atualizado: "aguardando o início da missão (seg, 03/11)",
+  caixinhaMeta: 30,
+  caixinhaAtual: 0,
+  votos: { A: 0, B: 0, C: 0 },
+  recado: "A missão começa segunda, 03/11. Ative as notificações dos Stories para não perder os códigos."
+};
+
+const ETAPAS = [
+  { id:1, dia:"Seg 03/11", nome:"A contratação", codigo:null },
+  { id:2, dia:"Ter 04/11", nome:"A ficha na UBS", codigo:"ahbjcm" },
+  { id:3, dia:"Qua 05/11", nome:"Saindo do município", codigo:"1gwyhh4" },
+  { id:4, dia:"Qui 06/11", nome:"O relatório do Ministério", codigo:"11ik3r2", mutirao:true },
+  { id:5, dia:"Sex 07/11", nome:"Decisão do time", codigo:"125njl5" },
+  { id:6, dia:"Sáb 08/11", nome:"Chegada à RNDS", codigo:"1p591ac" }
+];
+
+const KEY = "caminho-do-dado-v6";
+/* Endereço do app da planilha Google (Apps Script, termina em /exec). Vazio = registro desligado. */
+/* true quando o jogo roda num site próprio (GitHub Pages, Netlify): registra sozinho na planilha */
+const AUTO_REGISTRO = true;
+function hashCod(t){ let x=0x811c9dc5; for(const c of t){ x^=c.charCodeAt(0); x=Math.imul(x,0x01000193)>>>0; } return x.toString(36); }
+function enviaPlanilha(tipo,extra){
+  if(!PLANILHA || !AUTO_REGISTRO) return;
+  try{
+    if(!S.id){ S.id=Math.random().toString(36).slice(2,10); save(); }
+    const q=new URLSearchParams(Object.assign({tipo,id:S.id,nome:S.nome||"",insta:S.insta||"",pontos:String(total()),titulo:rank(total()),
+      missoes:String(Object.keys(S.feitas).length),pistas:String((S.pistas||[]).length)},extra||{}));
+    fetch(PLANILHA+"?"+q.toString(),{mode:"no-cors"}).catch(()=>{});
+  }catch(e){}
+}
+const PLANILHA = "https://script.google.com/macros/s/AKfycby2GzSIE4LVUWrneCSkRZblp2e4nWKg_FrQF5JtLDON2sH_uFfNFHi4-mTabxoWBX5NDg/exec";
+let S = { nome:"", abertas:[1], feitas:{}, pts:{}, resp:{}, atual:1 };
+try { const raw = localStorage.getItem(KEY); if (raw) S = Object.assign(S, JSON.parse(raw)); } catch(e) {}
+function save(){ try { localStorage.setItem(KEY, JSON.stringify(S)); } catch(e) {} }
+const $ = s => document.querySelector(s);
+const norm = s => (s||"").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^a-z0-9]/gi,"").toUpperCase();
+const total = () => Object.values(S.pts).reduce((a,b)=>a+b,0);
+function rank(p){ return p>=100 ? "Gestor(a) do Dado" : p>=60 ? "Analista de Dados" : "Gestor(a) em treinamento"; }
+function esc(t){ const d=document.createElement("div"); d.textContent=t; return d.innerHTML; }
+
+function codigoProgresso(){
+  const m={n:S.nome,a:S.abertas,f:S.feitas,p:S.pts,t:S.tent||{},k:S.pistas||[],r:S.resp,o:S.opina||null,i:S.insta||"",id:S.id||"",ins:!!S.inscrito,c:!!S.concluiu};
+  return "CD-"+btoa(unescape(encodeURIComponent(JSON.stringify(m)))).replace(/=+$/,"");
+}
+function lerCodigo(c){
+  try{
+    c=(c||"").trim().replace(/\s+/g,""); if(!c.startsWith("CD-")) return false;
+    const m=JSON.parse(decodeURIComponent(escape(atob(c.slice(3)))));
+    if(!m.n || !Array.isArray(m.a)) return false;
+    S=Object.assign(S,{nome:m.n,abertas:m.a,feitas:m.f||{},pts:m.p||{},tent:m.t||{},pistas:m.k||[],resp:m.r||{},opina:m.o||null,insta:m.i||"",id:m.id||S.id,inscrito:!!m.ins,concluiu:!!m.c,atual:1});
+    save(); return true;
+  }catch(e){ return false; }
+}
+function renderWho(){
+  const w = $("#who");
+  if (!S.nome){
+    w.innerHTML = `<form class="who" id="f-nome"><label for="nome" class="eyebrow" style="flex-basis:100%">Assine seu contrato</label><input id="nome" maxlength="40" placeholder="Seu nome" autocomplete="name"><input id="insta" maxlength="40" placeholder="Seu @ do Instagram" autocomplete="off"><button class="btn" type="submit">Entrar na missão</button><p class="lgpd">Ao entrar, você concorda que seu nome e @ sejam usados pelo Gestão na Saúde para acompanhar o desafio e enviar conteúdos e ofertas.</p></form>
+    <details class="restaura"><summary>Já comecei em outro celular</summary>
+      <form class="who" id="f-cod2"><label for="cod2" hidden>Código de progresso</label><input id="cod2" placeholder="Cole aqui seu código CD-..." autocomplete="off"><button class="btn" type="submit">Recuperar progresso</button></form><p class="msg" id="cod2-msg" style="color:#ffd9d6"></p></details>`;
+    $("#f-nome").addEventListener("submit", e => { e.preventDefault(); const v=$("#nome").value.trim(); if(!v) return; S.nome=v; S.insta=$("#insta").value.trim().replace(/^@+/,""); if(AUTO_REGISTRO){ S.inscrito=true; } save(); enviaPlanilha("inscricao"); renderAll(); });
+    $("#f-cod2").addEventListener("submit", e => { e.preventDefault(); if(lerCodigo($("#cod2").value)) renderAll(); else $("#cod2-msg").textContent="Esse código não funcionou. Confira se copiou ele inteiro, começando por CD-."; });
+  } else {
+    const p = total();
+    w.innerHTML = `<div class="badge"><b>${esc(S.nome)}</b><span class="pts">${p} pts</span><span class="rank">${rank(p)}</span><button class="link" id="salva" type="button">salvar progresso</button><button class="link" id="troca" type="button" style="margin-left:0">trocar nome</button></div>
+    ${PLANILHA && !AUTO_REGISTRO && !S.inscrito ? `<div class="inscr"><p><b>Último passo do contrato:</b> confirme sua inscrição. Vai abrir uma página nova; depois é só voltar para cá.</p><a class="btn" id="inscr" href="${linkPlanilha("inscricao")}" target="_blank" rel="noopener">Confirmar inscrição</a><p style="font-size:13px">Apareceu erro do Google Drive? Abra o desafio numa aba anônima e tente de novo.</p></div>` : ""}
+    <div class="salvabox" id="salvabox" hidden><p>Seu progresso já fica guardado neste celular. Para continuar em outro aparelho ou navegador, guarde este código num print ou no bloco de notas e cole em "Já comecei em outro celular".</p>
+      <pre class="msgbox" id="cdtxt"></pre><div class="row"><button class="btn" id="cdcopia" type="button">Copiar código</button></div><p class="msg" id="cdmsg"></p></div>`;
+    $("#troca").onclick = () => { S.nome=""; S.inscrito=false; save(); renderWho(); };
+    const ib=$("#inscr"); if(ib) ib.addEventListener("click",()=>{ S.inscrito=true; save(); setTimeout(renderWho,800); });
+    $("#salva").onclick = () => { const b=$("#salvabox"); b.hidden=!b.hidden; $("#cdtxt").textContent=codigoProgresso(); };
+    $("#cdcopia").onclick = () => { const t=codigoProgresso(), m=$("#cdmsg");
+      const sel=()=>{ const r=document.createRange(); r.selectNodeContents($("#cdtxt")); const x=getSelection(); x.removeAllRanges(); x.addRange(r); m.textContent="Código selecionado. Use copiar do seu celular."; };
+      try{ navigator.clipboard.writeText(t).then(()=>m.textContent="Código copiado. Guarde no bloco de notas.", sel); }catch(e){ sel(); } };
+  }
+}
+
+function status(id){ return S.feitas[id] ? "done" : S.abertas.includes(id) ? "open" : "locked"; }
+
+/* ===== Vídeo animado do atendimento ===== */
+function pessoa(o){
+  const {x,y,pele,cab,roupa,coque,oculos,rabo,sent,vira,cracha,braco} = o;
+  const s = vira ? -1 : 1;
+  let g = `<g transform="translate(${x} ${y}) scale(${s} 1)">`;
+  if (sent){
+    g += `<rect x="-6" y="-30" width="30" height="10" rx="5" fill="#2b2f55"/><rect x="16" y="-30" width="9" height="30" rx="4" fill="#2b2f55"/><rect x="14" y="-4" width="16" height="5" rx="2" fill="#1b1e3d"/>`;
+    g += `<rect x="-13" y="-66" width="26" height="40" rx="10" fill="${roupa}"/>`;
+  } else {
+    g += `<rect x="-9" y="-30" width="7" height="30" rx="3" fill="#2b2f55"/><rect x="2" y="-30" width="7" height="30" rx="3" fill="#2b2f55"/>`;
+    g += `<rect x="-14" y="-72" width="28" height="46" rx="10" fill="${roupa}"/>`;
+  }
+  const hy = sent ? -78 : -84;
+  g += `<g class="${braco||""}"><rect x="6" y="${hy+18}" width="22" height="8" rx="4" fill="${roupa}"/><circle cx="29" cy="${hy+22}" r="4.5" fill="${pele}"/>${o.mao||""}</g>`;
+  g += `<rect x="-3" y="${hy+8}" width="6" height="6" fill="${pele}"/><circle cx="0" cy="${hy}" r="11" fill="${pele}"/>`;
+  g += `<path d="M-11 ${hy} A11 11 0 0 1 11 ${hy} L11 ${hy-2} Q4 ${hy-7} -4 ${hy-5} L-11 ${hy+3} Z" fill="${cab}"/>`;
+  if (coque) g += `<circle cx="-7" cy="${hy-10}" r="6" fill="${cab}"/>`;
+  if (rabo) g += `<path d="M-10 ${hy-2} Q-20 ${hy+6} -14 ${hy+18}" stroke="${cab}" stroke-width="6" fill="none" stroke-linecap="round"/>`;
+  if (oculos) g += `<circle cx="5" cy="${hy+1}" r="3.6" fill="none" stroke="#3a3a4a" stroke-width="1.2"/><line x1="8.6" y1="${hy+1}" x2="11" y2="${hy}" stroke="#3a3a4a" stroke-width="1.2"/>`;
+  g += `<circle cx="6" cy="${hy+1}" r="1.3" fill="#1b1e3d"/><path d="M3 ${hy+6} Q6 ${hy+8} 9 ${hy+6}" stroke="#7a3a2a" stroke-width="1.2" fill="none"/>`;
+  if (cracha) g += `<g transform="scale(${s} 1)"><rect x="${s>0?2:-15}" y="${hy+28}" width="15" height="19" rx="1.5" fill="#fff" stroke="#9aa3c8" stroke-width=".6"/>
+    <rect x="${s>0?2:-15}" y="${hy+28}" width="15" height="3.4" fill="#2f6fe0"/>
+    <text x="${s>0?9.5:-7.5}" y="${hy+35}" text-anchor="middle" class="vt" style="font-size:3px;font-weight:700">CARLA M.</text>
+    <text x="${s>0?9.5:-7.5}" y="${hy+38.8}" text-anchor="middle" class="vt" style="font-size:2.4px">Técnica de</text>
+    <text x="${s>0?9.5:-7.5}" y="${hy+42}" text-anchor="middle" class="vt" style="font-size:2.25px">enfermagem</text></g>`;
+  return g + `</g>`;
+}
+const PELE_F="#c98b62", CAB_F="#d4d4dc", ROUPA_F="#c4477c";
+const CARLA = {pele:"#8d5a3b",cab:"#2b1a12",roupa:"#3fb5a8",rabo:true,cracha:true};
+function parede(cor){ return `<rect width="360" height="150" fill="${cor||"#e4ecff"}"/><rect y="150" width="360" height="70" fill="#c7d2ef"/><rect y="146" width="360" height="5" fill="#b3bfe3"/>`; }
+function placa(x,y,t){ return `<rect x="${x}" y="${y}" width="${t.length*6.2+20}" height="18" rx="4" fill="#0a0e78"/><text x="${x+10}" y="${y+12.5}" class="vt" style="font-size:8.5px;font-weight:700;fill:#fff;letter-spacing:.08em">${t}</text>`; }
+function calend(x,y,ano){ return `<g><rect x="${x}" y="${y}" width="56" height="64" rx="3" fill="#fff" stroke="#c0c8e8"/><rect x="${x}" y="${y}" width="56" height="15" rx="3" fill="#e04848"/><text x="${x+28}" y="${y+11}" text-anchor="middle" class="vt" style="font-size:7.5px;font-weight:700;fill:#fff">OUTUBRO</text><text x="${x+28}" y="${y+44}" text-anchor="middle" class="vt" style="font-size:24px;font-weight:800">21</text><text x="${x+28}" y="${y+58}" text-anchor="middle" class="vt" style="font-size:8px;font-weight:700;fill:#586">${ano}</text></g>`; }
+
+function videoSVG(){
+  const cad = `<rect x="98" y="118" width="40" height="6" rx="3" fill="#5b6290"/><rect x="104" y="124" width="5" height="26" fill="#5b6290"/><rect x="128" y="124" width="5" height="26" fill="#5b6290"/>`;
+  const seringa = `<g><rect x="30" y="-64" width="16" height="3.2" rx="1" fill="#fff" stroke="#6b7bb5" stroke-width=".6"/><rect x="46" y="-63.2" width="7" height="1.4" fill="#9aa3c8"/></g>`;
+  return `<svg viewBox="0 0 360 220" class="vsvg" role="img" aria-label="Animação do atendimento de Dona Francisca na UBS">
+  <!-- Cena 0: vacina -->
+  <g class="scn" id="scn0">${parede()}
+    ${placa(16,16,"SALA DE VACINA")}
+    <rect x="236" y="20" width="108" height="66" rx="4" fill="#fff" stroke="#c0c8e8"/>
+    <rect x="236" y="20" width="108" height="14" rx="4" fill="#3fb5a8"/>
+    <text x="290" y="30" text-anchor="middle" class="vt" style="font-size:7px;font-weight:700;fill:#fff">SUA EQUIPE DE SAÚDE</text>
+    <text x="290" y="48" text-anchor="middle" class="vt" style="font-size:9px;font-weight:800">eSF Vila Nova 2</text>
+    <text x="290" y="62" text-anchor="middle" class="vt mono" style="font-size:8px">INE 0001827364</text>
+    <text x="290" y="77" text-anchor="middle" class="vt" style="font-size:6.5px;fill:#586">ACS Rosa · Agende sua consulta</text>
+    <rect x="262" y="128" width="70" height="6" fill="#8a93c4"/><rect x="268" y="134" width="5" height="16" fill="#8a93c4"/><rect x="322" y="134" width="5" height="16" fill="#8a93c4"/>
+    <rect x="270" y="112" width="56" height="16" rx="2" fill="#fff" stroke="#9aa3c8"/><text x="298" y="123" text-anchor="middle" class="vt" style="font-size:6px;font-weight:700">INFLUENZA · IF2607B</text>
+    ${cad}${pessoa({x:118,y:150,pele:PELE_F,cab:CAB_F,roupa:ROUPA_F,coque:true,oculos:true,sent:true})}
+    <g class="v-carla">${pessoa(Object.assign({x:196,y:150,vira:true,braco:"v-seringa",mao:seringa},CARLA))}</g>
+    <g class="v-balao"><rect x="40" y="38" width="62" height="24" rx="12" fill="#fff" stroke="#0a0e78" stroke-width="1.5"/><path d="M84 61 L96 74 L76 61 Z" fill="#fff" stroke="#0a0e78" stroke-width="1.5"/><rect x="77" y="58" width="12" height="4" fill="#fff"/><text x="71" y="54" text-anchor="middle" class="vt" style="font-size:9px;font-weight:700">Nem doeu!</text></g>
+  </g>
+  <!-- Cena 1: recepção -->
+  <g class="scn" id="scn1">${parede()}
+    ${placa(196,16,"RECEPÇÃO")}
+    ${pessoa({x:262,y:132,pele:"#e0b08a",cab:"#6b3e1f",roupa:"#6a8ee8",vira:true})}
+    <rect x="196" y="104" width="140" height="46" rx="4" fill="#0a0e78"/><rect x="196" y="100" width="140" height="7" rx="3" fill="#141a9a"/>
+    <g class="v-anda">${pessoa({x:120,y:150,pele:PELE_F,cab:CAB_F,roupa:ROUPA_F,coque:true,oculos:true,braco:"v-entrega",mao:`<rect x="30" y="-68" width="13" height="9" rx="1.5" fill="#fff" stroke="#2f6fe0"/>`})}</g>
+    <g class="v-cartao">
+      <rect x="0" y="0" width="360" height="220" fill="#0a0e78" opacity=".55"/>
+      <rect x="64" y="46" width="232" height="128" rx="10" fill="#fff"/>
+      <rect x="64" y="46" width="232" height="30" rx="10" fill="#2f6fe0"/><rect x="64" y="66" width="232" height="10" fill="#2f6fe0"/>
+      <text x="80" y="65" class="vt" style="font-size:10px;font-weight:800;fill:#fff;letter-spacing:.06em">CARTÃO SUS</text>
+      <text x="280" y="65" text-anchor="end" class="vt" style="font-size:7px;fill:#fff">Santa Esperança do Sertão</text>
+      <text x="80" y="98" class="vt" style="font-size:7px;fill:#586;letter-spacing:.08em">NOME</text>
+      <text x="80" y="111" class="vt" style="font-size:11px;font-weight:700">FRANCISCA ALVES LIMA</text>
+      <text x="80" y="134" class="vt" style="font-size:7px;fill:#586;letter-spacing:.08em">NÚMERO DO CARTÃO</text>
+      <text x="80" y="153" class="vt mono" style="font-size:16px;font-weight:700">704 2315 8890 1146</text>
+    </g>
+  </g>
+  <!-- Cena 2: acolhimento -->
+  <g class="scn" id="scn2"><g class="v-cam2">${parede()}
+    ${placa(110,16,"ACOLHIMENTO")}
+    ${calend(24,22,"2026")}
+    <rect x="150" y="118" width="54" height="6" fill="#8a93c4"/><rect x="156" y="124" width="5" height="26" fill="#8a93c4"/><rect x="194" y="124" width="5" height="26" fill="#8a93c4"/>
+    <rect x="160" y="96" width="34" height="22" rx="3" fill="#1b1e3d"/><text x="177" y="111" text-anchor="middle" class="vt mono v-pa" style="font-size:9px;font-weight:700;fill:#5fd394">150/90</text>
+    ${cad}${pessoa({x:118,y:150,pele:PELE_F,cab:CAB_F,roupa:ROUPA_F,coque:true,oculos:true,sent:true})}
+    <rect x="126" y="100" width="12" height="9" rx="2" fill="#2b2f55"/>
+    ${pessoa(Object.assign({x:250,y:150,vira:true},CARLA))}
+  </g></g>
+  <!-- Cena 3: digitação -->
+  <g class="scn" id="scn3"><g class="v-cam3">${parede("#dcd6f2")}
+    <rect x="96" y="24" width="72" height="54" rx="3" fill="#f39a4a"/><rect x="96" y="24" width="72" height="54" rx="3" fill="url(#ceu)"/><line x1="132" y1="24" x2="132" y2="78" stroke="#fff" stroke-width="3"/><rect x="96" y="24" width="72" height="54" rx="3" fill="none" stroke="#fff" stroke-width="3"/>
+    ${calend(24,22,"2025")}
+    <circle cx="316" cy="40" r="20" fill="#fff" stroke="#0a0e78" stroke-width="2.5"/><line x1="316" y1="40" x2="320" y2="51" stroke="#0a0e78" stroke-width="2.5" stroke-linecap="round"/><line x1="316" y1="40" x2="316" y2="56" stroke="#0a0e78" stroke-width="1.6" stroke-linecap="round"/>
+    <rect x="176" y="122" width="150" height="7" fill="#6b5a4a"/><rect x="186" y="129" width="6" height="21" fill="#6b5a4a"/><rect x="310" y="129" width="6" height="21" fill="#6b5a4a"/>
+    <rect x="232" y="72" width="76" height="48" rx="4" fill="#1b1e3d"/><rect x="236" y="76" width="68" height="40" rx="2" fill="#e8eeff"/>
+    <rect x="240" y="80" width="40" height="3" fill="#2f6fe0"/>
+    <g class="v-linhas"><rect x="240" y="88" width="56" height="2.5" fill="#9aa3c8"/><rect x="240" y="94" width="48" height="2.5" fill="#9aa3c8"/><rect x="240" y="100" width="52" height="2.5" fill="#9aa3c8"/><rect x="240" y="106" width="36" height="2.5" fill="#9aa3c8"/></g>
+    <rect x="266" y="120" width="10" height="4" fill="#1b1e3d"/>
+    <g transform="rotate(6 300 84)"><rect x="288" y="66" width="30" height="26" fill="#ffe46b"/><text x="303" y="76" text-anchor="middle" class="vt" style="font-size:5px;font-weight:700">INE</text><text x="303" y="85" text-anchor="middle" class="vt mono" style="font-size:4.4px">0001827384</text></g>
+    <rect x="190" y="112" width="30" height="10" fill="#fff" stroke="#c0c8e8"/><rect x="192" y="108" width="30" height="10" fill="#fff" stroke="#c0c8e8"/><rect x="194" y="104" width="30" height="10" fill="#fff" stroke="#c0c8e8"/>
+    <rect x="232" y="122" width="44" height="5" rx="1" fill="#5b6290"/>
+    <rect x="160" y="118" width="34" height="6" rx="3" fill="#5b6290"/><rect x="174" y="124" width="5" height="26" fill="#5b6290"/>
+    ${pessoa({x:178,y:150,pele:"#b57a52",cab:"#141414",roupa:"#ef7d3c",sent:true,braco:"v-digita"})}
+  </g></g>
+  <defs><linearGradient id="ceu" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5b4bb5"/><stop offset="1" stop-color="#f39a4a" stop-opacity="0"/></linearGradient></defs>
+  </svg>`;
+}
+const CENAS = [
+  {g:1, n:"Recepção", hora:"08h10 · Recepção", leg:"Dona Francisca chega à UBS e entrega o cartão do SUS.", d:6500},
+  {g:2, n:"Acolhimento", hora:"08h25 · Acolhimento", leg:"Carla afere a pressão antes da vacina.", d:6500},
+  {g:0, n:"Vacina", hora:"08h40 · Sala de vacina", leg:"Dona Francisca recebe a vacina da influenza.", d:6500},
+  {g:3, n:"Digitação", hora:"17h30 · Digitação", leg:"No fim do dia, as fichas da manhã são digitadas às pressas para fechar a produção.", d:7500}
+];
+let VID=null;
+function criarVideo(){
+  const el=document.createElement("div"); el.className="video paused";
+  el.innerHTML = `<div class="vstage">${videoSVG()}<span class="vhora"></span><p class="vleg"></p>
+    <button class="vplay" type="button" aria-label="Assistir ao atendimento"><span class="tri"></span><b>Assistir ao atendimento</b></button></div>
+    <div class="vctrl"><button class="vpp" type="button">Pausar</button><div class="vchips">${CENAS.map((c,i)=>`<button type="button" data-i="${i}">${c.n}</button>`).join("")}</div></div>`;
+  let idx=0, playing=false, timer=null, t0=0, rest=0, fim=false;
+  const scn=i=>el.querySelector("#scn"+CENAS[i].g);
+  function mostra(i){
+    idx=i; fim=false;
+    for(let k=0;k<CENAS.length;k++){ const g=scn(k); g.classList.remove("on"); }
+    const g=scn(i); void g.getBoundingClientRect(); g.classList.add("on");
+    el.querySelector(".vhora").textContent=CENAS[i].hora; el.querySelector(".vleg").textContent=CENAS[i].leg;
+    el.querySelectorAll(".vchips button").forEach((b,k)=>b.classList.toggle("on",k===i));
+    rest=CENAS[i].d; if(playing) agenda();
+  }
+  function agenda(){ clearTimeout(timer); t0=Date.now(); timer=setTimeout(()=>{ if(idx<CENAS.length-1) mostra(idx+1); else { playing=false; fim=true; el.classList.add("paused","ended"); botao(); } }, rest); }
+  function botao(){ el.querySelector(".vpp").textContent = el.classList.contains("poster") ? "Assistir" : playing ? "Pausar" : fim ? "Assistir de novo" : "Continuar"; }
+  function play(){ el.classList.remove("paused","ended","poster"); if(fim){ playing=true; mostra(0); } else { playing=true; agenda(); } botao(); }
+  function pause(){ playing=false; clearTimeout(timer); rest=Math.max(300, rest-(Date.now()-t0)); el.classList.add("paused"); botao(); }
+  el.querySelector(".vplay").onclick=()=>{ playing=true; el.classList.remove("poster","paused"); mostra(0); botao(); };
+  el.querySelector(".vpp").onclick=()=>{ if(el.classList.contains("poster")){ el.querySelector(".vplay").click(); return; } playing?pause():play(); };
+  el.querySelectorAll(".vchips button").forEach(b=>b.onclick=()=>{ el.classList.remove("poster","ended"); const was=playing; playing=true; el.classList.remove("paused"); mostra(+b.dataset.i); if(!was){} botao(); });
+  el.reset=()=>{ clearTimeout(timer); playing=false; el.classList.add("paused","poster"); el.classList.remove("ended"); mostra(0); botao(); };
+  el.reset();
+  return el;
+}
+function encaixaVideo(){
+  const ph=document.querySelector("#vid-ph"); if(!ph) return;
+  VID ||= criarVideo(); ph.replaceWith(VID);
+}
+
+/* ===== Tabuleiro ===== */
+const PTS = [{x:78,y:112},{x:282,y:222},{x:78,y:338},{x:282,y:454},{x:78,y:570},{x:270,y:690}];
+const LUGAR = ["Prefeitura","UBS Vila Nova","Secretaria de Saúde","Ministério da Saúde","Sala de situação","RNDS · Meu SUS"];
+const ROAD = "M40 30 C40 80 50 112 78 112 C190 112 300 150 282 222 C266 292 96 262 78 338 C60 412 270 380 282 454 C294 528 96 494 78 570 C60 640 190 660 270 690 L345 700";
+const PISTAS = [
+  {m:2, t:"Nem tudo que parece igual é igual."},
+  {m:3, t:"Ninguém é avaliado antes de chegar."},
+  {m:2, t:"Repare no que as pessoas carregam no peito."},
+  {m:4, t:"Repetição também é uma pista."},
+  {m:2, t:"Paredes também guardam lembranças."},
+  {m:3, t:"Toda viagem termina perto de quem a começou."},
+  {m:5, t:"Nem todo atalho chega ao destino."}
+];
+const ICON = {
+  lock:'<path d="M-7 -1h14v10h-14z M-4 -1v-4a4 4 0 0 1 8 0v4" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linejoin="round"/>',
+  check:'<path d="M-9 0l6 6l12 -12" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>'
+};
+const NS="http://www.w3.org/2000/svg";
+function svgEl(t,a,p){ const e=document.createElementNS(NS,t); for(const k in a) e.setAttribute(k,a[k]); if(p) p.appendChild(e); return e; }
+
+function buildBoard(){
+  const svg=$("#tab"); svg.innerHTML="";
+  const defs=svgEl("defs",{},svg);
+  defs.innerHTML=`<pattern id="pt" width="22" height="22" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="1.3" fill="#2a32b8"/></pattern>
+  <filter id="sh" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="3" stdDeviation="2.5" flood-color="#000" flood-opacity=".35"/></filter>`;
+  svgEl("rect",{x:0,y:0,width:360,height:800,rx:22,fill:"#0a0e78"},svg);
+  svgEl("rect",{x:0,y:0,width:360,height:800,rx:22,fill:"url(#pt)"},svg);
+  // cenário: quarteirões e árvores
+  [[150,40,60,34],[200,300,50,30],[150,610,56,30],[240,560,40,26]].forEach(([x,y,w,h])=>svgEl("rect",{x,y,width:w,height:h,rx:6,fill:"#141a9a"},svg));
+  [[318,70],[330,300],[24,220],[30,450],[330,600],[190,520],[170,380]].forEach(([x,y])=>{ svgEl("circle",{cx:x,cy:y,r:10,fill:"#1d6b55"},svg); svgEl("circle",{cx:x-4,cy:y-4,r:4,fill:"#2b8c6f"},svg); });
+  // estrada
+  svgEl("path",{d:ROAD,fill:"none",stroke:"#2f6fe0",'stroke-width':30,'stroke-linecap':"round"},svg);
+  svgEl("path",{d:ROAD,fill:"none",stroke:"#3e7ff0",'stroke-width':22,'stroke-linecap':"round"},svg);
+  const guide=svgEl("path",{d:ROAD,fill:"none",stroke:"#ffcc00",'stroke-width':2.5,'stroke-dasharray':"7 9",opacity:.9},svg);
+  // casas pequenas e casas-surpresa
+  const L=guide.getTotalLength(); const cand=[];
+  for(let d=34; d<L-20; d+=30){
+    const p=guide.getPointAtLength(d);
+    if (PTS.some((s,j)=>Math.hypot(s.x-p.x,s.y-p.y)<48 || (Math.abs((s.x+(j%2===0?55:-55))-p.x)<95 && p.y>s.y+28 && p.y<s.y+92))) continue;
+    p.d=d; cand.push(p);
+  }
+  const PP=[[134,116],[243,149],[122,292],[221,401],[122,521],[180,640],[316,700]];
+  const near=p=>PP.some(([x,y])=>Math.hypot(x-p.x,y-p.y)<20);
+  cand.forEach(p=>{ if(!near(p)) svgEl("circle",{cx:p.x,cy:p.y,r:5,fill:"#ffffff",opacity:.85},svg); });
+  PP.forEach(([x,y],i)=>{
+    const g=svgEl("g",{class:"curio",id:"cur"+i,tabindex:0,role:"button",'aria-label':"Casa de pista "+(i+1),transform:`translate(${x} ${y})`},svg);
+    svgEl("circle",{r:12,class:"cdisk",filter:"url(#sh)"},g);
+    const t=svgEl("text",{y:5,'text-anchor':"middle",class:"t-q"},g); t.textContent="?";
+    const open=()=>abrirPista(i); g.addEventListener("click",open); g.addEventListener("keydown",e=>{ if(e.key==="Enter"||e.key===" "){e.preventDefault();open();} });
+  });
+  // largada e chegada
+  flag(svg,40,30,"LARGADA"); flag(svg,342,700,"CHEGADA");
+  // missões
+  ETAPAS.forEach((e,i)=>{
+    const {x,y}=PTS[i]; const g=svgEl("g",{class:"stn",id:"stn"+e.id,tabindex:0,role:"button",transform:`translate(${x} ${y})`},svg);
+    svgEl("circle",{r:36,class:"halo"},g);
+    svgEl("circle",{r:30,class:"disk",filter:"url(#sh)"},g);
+    svgEl("circle",{r:24,class:"ring"},g);
+    svgEl("g",{class:"glyph"},g);
+    const left = i%2===0;
+    const lab=svgEl("g",{transform:`translate(${left?-36:36} 46)`},g);
+    const r=svgEl("rect",{rx:8,class:"plaque"},lab);
+    const t1=svgEl("text",{x:0,y:0,'text-anchor':left?"start":"end",class:"t-day"},lab); t1.textContent="MISSÃO "+e.id+" · "+e.dia.toUpperCase();
+    const t2=svgEl("text",{x:0,y:16,'text-anchor':left?"start":"end",class:"t-nm"},lab); t2.textContent=e.nome;
+    const t3=svgEl("text",{x:0,y:30,'text-anchor':left?"start":"end",class:"t-pl"},lab); t3.textContent=LUGAR[i];
+    const b=lab.getBBox(); r.setAttribute("x",b.x-9); r.setAttribute("y",b.y-6); r.setAttribute("width",b.width+18); r.setAttribute("height",b.height+12);
+    const go=()=>openMission(e.id); g.addEventListener("click",go); g.addEventListener("keydown",ev=>{ if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();go();} });
+  });
+  // peão
+  const pawn=svgEl("g",{id:"pawn"},svg);
+  svgEl("ellipse",{cx:0,cy:16,rx:12,ry:4,fill:"#000",opacity:.3},pawn);
+  svgEl("path",{d:"M-11 14 C-11 4 -6 -2 -6 -6 A9 9 0 1 1 6 -6 C6 -2 11 4 11 14 Z",fill:"#ffcc00",stroke:"#0a0e78",'stroke-width':2.5},pawn);
+  const pt=svgEl("text",{y:-7,'text-anchor':"middle",class:"t-pawn"},pawn); pt.textContent="D";
+}
+function flag(svg,x,y,txt){
+  const g=svgEl("g",{transform:`translate(${x} ${y})`},svg);
+  svgEl("line",{x1:0,y1:8,x2:0,y2:-24,stroke:"#fff",'stroke-width':2.5},g);
+  svgEl("path",{d:"M0 -24 L22 -18 L0 -11 Z",fill:"#ffcc00"},g);
+  const t=svgEl("text",{x:txt==="CHEGADA"?20:8,y:txt==="CHEGADA"?-30:24,'text-anchor':txt==="CHEGADA"?"end":"start",class:"t-day"},g); t.textContent=txt;
+}
+
+function renderTrack(){
+  if (!$("#tab").firstChild) buildBoard();
+  const cur = ETAPAS.find(e=>!S.feitas[e.id]);
+  ETAPAS.forEach((e,i)=>{
+    const g=$("#stn"+e.id), st=status(e.id);
+    g.setAttribute("class","stn "+st+(cur&&cur.id===e.id?" now":""));
+    g.setAttribute("aria-label",`Missão ${e.id}: ${e.nome}, ${st==="done"?"concluída":st==="open"?"aberta":"bloqueada"}`);
+    g.querySelector(".glyph").innerHTML = st==="done" ? ICON.check : st==="locked" ? `<g transform="translate(0 -1)">${ICON.lock}</g>` : `<text y="9" text-anchor="middle" class="t-num">${e.id}</text>`;
+  });
+  const at = cur ? PTS[cur.id-1] : {x:322,y:700};
+  $("#pawn").setAttribute("transform",`translate(${at.x+(cur?26:0)} ${at.y-(cur?30:22)})`);
+  const n = Object.keys(S.feitas).length;
+  (S.pistas||[]).forEach(i=>{ const c=$("#cur"+i); if(c) c.classList.add("found"); });
+  PISTAS.forEach((P,i)=>{ const c=$("#cur"+i); if(c) c.classList.toggle("sleep", status(P.m)==="locked"); });
+  $("#prog").textContent = `${n} de 6 missões · ${(S.pistas||[]).length} de ${PISTAS.length} pistas · ${total()} pts`;
+}
+
+function abrirPista(i){
+  const P=PISTAS[i]; S.pistas=S.pistas||[];
+  if (status(P.m)==="locked"){ toast("Esta casa ainda está dormindo. Ela acorda junto com a Missão "+P.m+"."); return; }
+  if (!S.pistas.includes(i)){ S.pistas.push(i); save(); renderTrack(); }
+  toast("Pista da Missão "+P.m+": "+P.t);
+}
+function openMission(id){
+  S.atual=id; save(); if(VID) VID.reset(); renderPanel();
+  const sh=$("#sheet"); sh.hidden=false;
+  try{ sh.scrollIntoView({behavior:"smooth",block:"start"}); }catch(e){ sh.scrollIntoView(); }
+  setTimeout(()=>{ try{ $("#fechar").focus({preventScroll:true}); }catch(e){} },400);
+}
+function closeMission(){ $("#sheet").hidden=true; const bd=document.querySelector(".board"); try{ bd.scrollIntoView({behavior:"smooth",block:"start"}); }catch(e){ bd.scrollIntoView(); } }
+let toastT;
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.hidden=false; clearTimeout(toastT); toastT=setTimeout(()=>t.hidden=true,5200); }
+
+function finish(id, pts){
+  if (S.feitas[id]) return;
+  S.feitas[id]=true; S.pts[id]=pts;
+  save(); renderAll();
+  const r=S.resp[id]; enviaPlanilha("missao",{missao:String(id),ptsmissao:String(pts),resultado: r&&r.win===false?"falhou":"cumpriu",tentativas:String(r&&r.tries||((S.tent||{})[id]||0)||1)});
+}
+
+function lockView(e){
+  const mut = e.mutirao ? `<div class="mutirao"><h3>Etapa de mutirão</h3><p class="msg">O código só sai quando o time inteiro bater a meta: <b>${MURAL.caixinhaMeta} respostas</b> na caixinha dos Stories de quinta. Responda e chame um colega da APS para o seu time.</p>${barra(MURAL.caixinhaAtual, MURAL.caixinhaMeta)}</div>` : "";
+  return `<div class="lockbox"><h3>Estação bloqueada</h3><p class="msg">O código desta estação aparece nos Stories de ${e.dia}. Digite aqui para abrir.</p>
+    <form class="row" id="f-cod"><label for="cod" hidden>Código</label><input id="cod" placeholder="Código do dia" autocomplete="off"><button class="btn" type="submit">Abrir estação</button></form><p class="msg" id="cod-msg"></p></div>${mut}`;
+}
+function barra(a,m){ const pc=Math.min(100,Math.round(a/m*100)); return `<div class="bar" role="img" aria-label="${a} de ${m}"><i style="width:${pc}%"></i></div><div class="bar-l"><span>${a} respostas</span><span>meta ${m}</span></div>`; }
+
+function head(e,sub){ return `<div class="panel-head"><div class="eyebrow">Estação ${e.id} · ${e.dia}</div><h2>${e.nome}</h2>${sub?`<p style="margin:0;color:#d9dcff">${sub}</p>`:""}</div>`; }
+function doneLine(id){ return S.feitas[id] ? `<p class="done-tag">✓ Estação concluída · +${S.pts[id]} pts</p>` : ""; }
+
+/* ---------- conteúdos ---------- */
+function etapa1(){
+  return `<p class="case">“Dona Francisca, 67 anos, foi à UBS Vila Nova no dia 21/10. Aferiu a pressão e tomou a vacina da influenza. Duas semanas depois, a vacina não aparece no Meu SUS Digital dela e o atendimento não entrou na produção da equipe. Descubra onde esse dado se perdeu.” <br><small style="color:var(--muted)">Prefeita de Santa Esperança do Sertão</small></p>
+  <div class="facts"><div class="fact"><small>População</small><b>18.400</b></div><div class="fact"><small>Equipes eSF</small><b>6</b></div><div class="fact"><small>UBS</small><b>5</b></div><div class="fact"><small>Prazo da missão</small><b>6 dias</b></div></div>
+  <div id="vid-ph"></div>
+  <p>Seu caminho tem três paradas, as mesmas do workshop: o dado saindo do município, o dado avaliado pelo Ministério e o dado chegando à RNDS. Cada dia uma estação nova abre com o código dos Stories.</p>
+  ${S.feitas[1] ? doneLine(1) : `<div class="row"><button class="btn" id="aceito" type="button">Aceito a missão</button></div>`}`;
+}
+function bind1(){ const b=$("#aceito"); if(b) b.onclick=()=>{ if(!S.nome){ closeMission(); $("#nome")?.focus(); return; } S.abertas.includes(2)||0; finish(1,10); }; }
+
+const ATENDIMENTO = [
+  {h:"08h10 · Recepção", t:"Dona Francisca entrega o cartão do SUS na recepção. Ela é acompanhada pela equipe da agente comunitária Rosa."},
+  {h:"08h25 · Acolhimento", t:"Carla, que trabalha na UBS desde 2023, afere a pressão de Dona Francisca."},
+  {h:"08h40 · Sala de vacina", t:"Carla aplica a vacina da influenza e orienta sobre reações esperadas."},
+  {h:"17h30 · Digitação", t:"No fim do dia, um estagiário digita as fichas em papel da manhã no e-SUS APS."}
+];
+const CAMPOS = [
+  {k:"Unidade (CNES)", v:"UBS Vila Nova · 7654321", erro:false, why:"Confere com a unidade do atendimento."},
+  {k:"Equipe (INE)", v:"eSF Vila Nova 2 · 0001827384", erro:true, why:"Compare com a recepção: o INE certo é 0001827364. Um único dígito trocado manda a produção para uma equipe que não existe."},
+  {k:"Profissional", v:"Carla M. · Auxiliar de enfermagem", erro:true, why:"Carla é técnica de enfermagem, não auxiliar. A categoria (CBO) da ficha precisa ser a mesma do cadastro no CNES; se não bate, o registro é reprovado."},
+  {k:"Cidadã", v:"Francisca Alves Lima · 67 anos", erro:false, why:"Nome e idade conferem."},
+  {k:"CNS", v:"704 2315 8890 114", erro:true, why:"Compare com a recepção: falta o último dígito. São 15 números, e um CNS inválido impede a identificação da cidadã e a chegada à RNDS."},
+  {k:"Pressão arterial", v:"150 x 90 mmHg", erro:false, why:"Valor alto, mas registrado exatamente como foi aferido. O dado está certo."},
+  {k:"Vacina · lote", v:"Influenza · IF2607B", erro:false, why:"Imunobiológico e lote conferem com a sala de vacina."},
+  {k:"Data do atendimento", v:"21/10/2025", erro:true, why:"O ano foi digitado errado. Com 2025, o registro cai numa competência já encerrada e não é aceito."}
+];
+/* ---------- tentativas e resultado (sem revelar respostas) ---------- */
+const VIDAS = 3, MULT = [1, .6, .3];
+window._fb = window._fb || {};
+function vidas(id){
+  const f = (S.tent||{})[id]||0;
+  return `<span class="vidas" aria-label="${VIDAS-f} de ${VIDAS} tentativas restantes">${[0,1,2].map(i=>`<i class="${i<VIDAS-f?"on":""}"></i>`).join("")}</span>`;
+}
+function tentar(id, venceu, maxPts, msgFalha){
+  S.tent = S.tent||{};
+  const f = S.tent[id]||0;
+  if (venceu){ S.resp[id]={win:true,tries:f+1}; delete window._fb[id]; finish(id, Math.round(maxPts*MULT[f])); return; }
+  S.tent[id]=f+1;
+  if (S.tent[id]>=VIDAS){ S.resp[id]={win:false}; delete window._fb[id]; finish(id,0); return; }
+  window._fb[id]={msg:msgFalha, n:Date.now()}; save(); renderPanel();
+}
+function resultado(id){
+  const r=S.resp[id];
+  if (r) return r.win
+    ? `<div class="stamp win"><b>Missão cumprida</b><span>${r.tries===1?"De primeira!":"Na "+r.tries+"ª tentativa."} +${S.pts[id]} pts</span></div>`
+    : `<div class="stamp fail"><b>Missão falhou</b><span>As tentativas acabaram. As respostas desta missão não aparecem aqui: quem quiser entender cada passo do dado descobre no Workshop.</span></div>`;
+  const fb=window._fb[id];
+  if (!fb) return "";
+  const rest=VIDAS-(S.tent[id]||0);
+  return `<div class="stamp try" data-n="${fb.n}"><b>Ainda não</b><span>${fb.msg} Você tem mais ${rest} tentativa${rest>1?"s":""}. Procure as pistas no tabuleiro.</span></div>`;
+}
+function topoMissao(id){ return S.resp[id] ? "" : `<div class="mtop"><span>Tentativas</span>${vidas(id)}</div>`; }
+
+/* ---------- Missão 2 ---------- */
+function etapa2(){
+  const r = S.resp[2]; const sel = (window._sel2 ||= []);
+  const story = `<div class="pront"><div class="pront-h">O que aconteceu na UBS · 21/10/2026</div>${ATENDIMENTO.map(a=>`<div class="pront-i"><b>${a.h}</b><p>${a.t}</p></div>`).join("")}</div>`;
+  const rows = CAMPOS.map((c,i)=>`<button type="button" class="field ${sel.includes(i)&&!r?"sel":""}" data-i="${i}" ${r?"disabled":""} aria-pressed="${sel.includes(i)}"><small>${c.k}</small><span class="v">${c.v}</span></button>`).join("");
+  const n = sel.length;
+  return `${topoMissao(2)}<p><b>Passo 1.</b> Assista ao atendimento da Dona Francisca. Pause e volte as cenas quantas vezes quiser: os detalhes importam.</p><div id="vid-ph"></div>${story}
+  <p><b>Passo 2.</b> Esta é a ficha que foi digitada no sistema. Compare com o atendimento e toque nos campos com problema. Há erros escondidos, alguns num único número.</p>
+  <div class="ficha"><div class="ficha-h"><span>Ficha digitada · e-SUS APS</span><span>UBS Vila Nova</span></div>${rows}</div>
+  ${resultado(2)}
+  ${r ? doneLine(2) : `<div class="row" style="align-items:center"><button class="btn" id="conf2" type="button" ${n?"":"disabled"}>Enviar análise</button><span class="msg" style="color:var(--muted)">${n ? n+" campo(s) marcado(s)" : "Marque os campos com erro"}</span></div>`}`;
+}
+function bind2(){
+  if (S.resp[2]) return;
+  document.querySelectorAll(".field").forEach(b=>b.onclick=()=>{ const i=+b.dataset.i, s=window._sel2; const k=s.indexOf(i); k<0?s.push(i):s.splice(k,1); delete window._fb[2]; renderPanel(); });
+  $("#conf2").onclick=()=>{ const s=window._sel2; if(!s.length) return;
+    const ok=s.filter(i=>CAMPOS[i].erro).length, err=s.length-ok, tot=CAMPOS.filter(c=>c.erro).length;
+    const msg = ok===tot && err ? `Você achou todos os erros, mas também marcou ${err} campo(s) que estão certos.` : `Sua análise ainda não fecha com a ficha.`;
+    tentar(2, ok===tot && err===0, 40, msg); };
+}
+
+/* ---------- Missão 3 ---------- */
+const ORDEM = ["Registro do atendimento no e-SUS APS da UBS","Envio da produção pelo município","Processamento e validação pelo Ministério da Saúde","Integração com a RNDS","Dona Francisca vê a vacina no Meu SUS Digital"];
+const EMBARALHADO = [2,4,0,3,1];
+function etapa3(){
+  const r=S.resp[3]; const pick = (window._p3 ||= []);
+  const items = EMBARALHADO.map(i=>{ const pos=pick.indexOf(i);
+    return `<button type="button" class="chip ${pos>=0?"picked":""}" data-i="${i}" ${r?"disabled":""}><span class="n">${pos>=0?pos+1:"·"}</span><span>${ORDEM[i]}</span></button>`; }).join("");
+  return `${topoMissao(3)}<p>Agora o dado precisa sair de Santa Esperança. Toque nas etapas na ordem em que o dado percorre o caminho, da UBS até o celular da Dona Francisca. Tocou errado? Toque de novo para desmarcar.</p>
+  <div class="order">${items}</div>${resultado(3)}
+  ${r ? doneLine(3) : `<div class="row"><button class="btn" id="conf3" type="button" ${pick.length<5?"disabled":""}>Enviar caminho</button><button class="btn ghost" id="lim3" type="button">Recomeçar</button></div>`}`;
+}
+function bind3(){
+  if (S.resp[3]) return;
+  document.querySelectorAll(".chip").forEach(b=>b.onclick=()=>{ const i=+b.dataset.i, p=window._p3; const k=p.indexOf(i); k<0?p.push(i):p.splice(k,1); delete window._fb[3]; renderPanel(); });
+  $("#lim3").onclick=()=>{ window._p3=[]; delete window._fb[3]; renderPanel(); };
+  $("#conf3").onclick=()=>{ const p=window._p3; const ok=p.filter((v,i)=>v===i).length;
+    tentar(3, ok===5, 30, `O dado tropeçou no caminho: ${ok} de 5 etapas estão no lugar certo.`); };
+}
+
+const REL = [
+  {f:"0451", ub:"UBS Centro", d:"20/10/2026", s:"a", m:"—"},
+  {f:"0452", ub:"UBS Vila Nova", d:"21/10/2025", s:"r", m:"Data fora da competência informada"},
+  {f:"0453", ub:"UBS Vila Nova", d:"21/10/2026", s:"r", m:"Equipe (INE) não localizada"},
+  {f:"0454", ub:"UBS Serrote", d:"21/10/2026", s:"a", m:"—"},
+  {f:"0455", ub:"UBS Vila Nova", d:"21/10/2026", s:"r", m:"Equipe (INE) não localizada"}
+];
+const Q4 = [
+  { t:"A ficha 0452 é a da Dona Francisca. Por que o sistema a barrou primeiro?", o:["Vacina fora do calendário","Data fora da competência informada","Unidade sem CNES","Envio duplicado"], c:1 },
+  { t:"Quantas fichas da UBS Vila Nova foram reprovadas neste relatório?", o:["1","2","3"], c:2 },
+  { t:"As fichas 0453 e 0455 foram digitadas pelo mesmo estagiário, no mesmo fim de tarde. O que provavelmente aconteceu?", o:["As cidadãs não tinham cartão do SUS","Ele usou a mesma anotação errada em todas as fichas","A UBS Vila Nova foi descredenciada","O Ministério perdeu as fichas"], c:1 }
+];
+
+/* ---------- quiz sem gabarito ---------- */
+function quiz(id, Q){
+  const r=S.resp[id]; const a=(window["_q"+id] ||= {});
+  return Q.map((q,qi)=>`<div class="q" role="radiogroup" aria-label="${q.t}"><h3>${Q.length>1?(qi+1)+". ":""}${q.t}</h3>${q.o.map((o,oi)=>
+    `<button type="button" role="radio" aria-checked="${a[qi]===oi}" class="opt ${a[qi]===oi?"pick":""}" data-q="${qi}" data-o="${oi}" ${r?"disabled":""}>${o}</button>`).join("")}</div>`).join("")
+  + resultado(id)
+  + (r ? doneLine(id) : `<div class="row"><button class="btn" id="envq" type="button" ${Object.keys(a).length<Q.length?"disabled":""}>Enviar resposta${Q.length>1?"s":""}</button></div>`);
+}
+function bindQuiz(id, Q, maxPts){
+  if (S.resp[id]) return;
+  const a = window["_q"+id] ||= {};
+  document.querySelectorAll(".opt").forEach(b=>b.onclick=()=>{ a[+b.dataset.q]=+b.dataset.o; delete window._fb[id]; renderPanel(); });
+  const e=$("#envq"); if(e) e.onclick=()=>{ const ok=Q.filter((q,i)=>a[i]===q.c).length;
+    tentar(id, ok===Q.length, maxPts, Q.length>1 ? `Você acertou ${ok} de ${Q.length}.` : `Essa decisão não leva o dado adiante.`); };
+}
+
+function etapa4(){
+  return `<p>O município enviou a produção e o Ministério devolveu o relatório de validação. O time bateu a meta do mutirão e abriu esta estação. Atenção: o relatório mostra só o primeiro motivo que barrou cada ficha. Uma ficha reprovada pode esconder outros erros.</p>
+  <div class="table-scroll"><table><thead><tr><th>Ficha</th><th>Unidade</th><th>Data</th><th>Situação</th><th>Motivo</th></tr></thead><tbody>
+  ${REL.map(x=>`<tr class="${x.f==="0452"?"hl":""}"><td class="mono">${x.f}</td><td>${x.ub}</td><td class="mono">${x.d}</td><td><span class="st ${x.s}">${x.s==="a"?"Aprovada":"Reprovada"}</span></td><td>${x.m}</td></tr>`).join("")}
+  </tbody></table></div>${quiz(4,Q4)}${doneLine(4)}`;
+}
+
+const Q5 = [{ t:"Hoje o time decide nos Stories. E você, o que faria com a ficha da Dona Francisca?", o:["Corrigir a ficha conferindo com o atendimento e reenviar dentro do prazo da competência","Esperar o próximo mês, porque o sistema corrige sozinho","Apagar a ficha e registrar a vacina de novo como um atendimento novo"], c:0 }];
+function etapa5(){
+  return `<p>Você já sabe onde o dado travou. Agora é decidir, junto com o time, o que fazer antes que o prazo da competência feche. Vote aqui e na enquete dos Stories. O resultado do time aparece no mural.</p>${quiz(5,Q5)}${doneLine(5)}`;
+}
+
+function etapa6(){
+  const p=total();
+  return `<p>A ficha corrigida foi reenviada, validada pelo Ministério e integrada à RNDS. Dona Francisca abriu o Meu SUS Digital e lá estava a vacina da influenza. Dado entregue.</p>
+  ${S.feitas[6] ? `<div class="cert"><div class="eyebrow">Desafio da Veri · Missão cumprida</div><h3>${esc(S.nome||"Gestor(a)")}</h3><p>levou o dado da UBS até a RNDS e conquistou o título de</p><p style="font-family:var(--f-display);font-weight:800;color:var(--gold);font-size:20px">${rank(p)}</p><span class="pts">${p} de 130 pts</span><p style="font-size:13px">Gestão na Saúde · Verineida Lima</p></div>
+  <p><b>Tire um print deste cartão</b> e poste nos seus Stories me marcando. Os cartões repostados entram no destaque da missão.</p>${caixinha()}` : `<div class="row"><button class="btn" id="fim" type="button">Entregar o dado</button></div>`}`;
+}
+/* ===== Caixinha final ===== */
+const INSTA = "verineida";
+const PROX = ["Campanha de vacinação","Saúde na escola (PSE)","Saúde mental e RAPS","Financiamento da APS","Indicadores da equipe"];
+
+function caixinha(){
+  const F = S.opina;
+  if (F && F.enviado) return `<div class="opina"><h3>Obrigada pela sua opinião!</h3>
+    ${PLANILHA && AUTO_REGISTRO ? `<p class="done-tag">✓ Sua conclusão entrou no ranking</p>` : PLANILHA && !S.concluiu ? `<p>Falta um toque para sua missão entrar no ranking: vai abrir uma página nova confirmando o registro.</p><a class="btn" id="reg-fim" href="${linkPlanilha("conclusao",F)}" target="_blank" rel="noopener">Registrar minha conclusão</a><p class="msg" style="color:var(--muted)">Apareceu erro do Google Drive? Abra numa aba anônima ou mande a mensagem abaixo no meu direct.</p>` : PLANILHA ? `<p class="done-tag">✓ Conclusão registrada</p>` : ""}
+    <p>Se preferir, copie a mensagem e mande ${INSTA?`no direct do <b>@${INSTA}</b>`:"no meu direct"}:</p>
+    <pre class="msgbox" id="msgtxt">${esc(textoOpina(F))}</pre>
+    <div class="row"><button class="btn" id="copiar" type="button">Copiar mensagem</button>${INSTA?`<a class="btn ghost" href="https://instagram.com/${INSTA}" target="_blank" rel="noopener">Abrir o Instagram</a>`:""}<button class="btn ghost" id="editar" type="button">Editar resposta</button></div>
+    <p class="msg" id="copmsg"></p></div>`;
+  const f = window._op ||= {nota:0, achou:"", prox:"", outra:""};
+  return `<form class="opina" id="f-op"><h3>Caixinha da missão</h3>
+    <div class="q"><span class="lbl" id="l-nota">De 1 a 5, quanto você curtiu a missão?</span>
+      <div class="notas" role="radiogroup" aria-labelledby="l-nota">${[1,2,3,4,5].map(n=>`<button type="button" role="radio" aria-checked="${f.nota===n}" class="nota ${f.nota>=n?"on":""}" data-n="${n}">${n}</button>`).join("")}</div></div>
+    <div class="q"><label class="lbl" for="achou">O que você achou? Conta pra mim.</label><textarea id="achou" rows="3" maxlength="500" placeholder="O que foi mais legal, o que foi difícil, o que faltou...">${esc(f.achou)}</textarea></div>
+    <div class="q"><span class="lbl" id="l-prox">Qual missão você quer na próxima temporada?</span>
+      <div class="proxs" role="radiogroup" aria-labelledby="l-prox">${[...PROX,"Outra"].map(o=>`<button type="button" role="radio" aria-checked="${f.prox===o}" class="pchip ${f.prox===o?"on":""}" data-o="${o}">${o}</button>`).join("")}</div>
+      ${f.prox==="Outra"?`<label class="lbl" for="outra" hidden>Qual?</label><input id="outra" maxlength="80" placeholder="Qual tema?" value="${esc(f.outra)}">`:""}</div>
+    <div class="row"><button class="btn" type="submit" ${f.nota&&f.prox?"":"disabled"}>Enviar minha opinião</button><span class="msg" style="color:var(--muted)">${f.nota&&f.prox?"":"Dê uma nota e escolha a próxima missão"}</span></div>
+  </form>`;
+}
+function textoOpina(F){
+  return `Desafio da Veri · O Caminho do Dado\nNome: ${S.nome}${S.insta?" (@"+S.insta+")":""}\nPontos: ${total()} (${rank(total())})\nNota: ${F.nota}/5\nO que achei: ${F.achou||"-"}\nPróxima missão: ${F.prox==="Outra"?(F.outra||"Outra"):F.prox}`;
+}
+function linkPlanilha(tipo,F){
+  if(!S.id){ S.id=Math.random().toString(36).slice(2,10); save(); }
+  const q=new URLSearchParams({tipo, id:S.id, nome:S.nome||"", insta:S.insta||"", pontos:String(total()), titulo:rank(total()),
+    missoes:String(Object.keys(S.feitas).length), pistas:String((S.pistas||[]).length)});
+  if(F){ q.set("nota",String(F.nota)); q.set("achou",F.achou||""); q.set("prox",F.prox==="Outra"?(F.outra||"Outra"):F.prox); }
+  return PLANILHA+"?"+q.toString();
+}
+function bindCaixinha(){
+  const F=S.opina;
+  if (F && F.enviado){
+    const rf=$("#reg-fim"); if(rf) rf.addEventListener("click",()=>{ S.concluiu=true; save(); setTimeout(renderPanel,800); });
+    $("#copiar").onclick=()=>{ const t=textoOpina(F), m=$("#copmsg");
+      const sel=()=>{ const r=document.createRange(); r.selectNodeContents($("#msgtxt")); const s=getSelection(); s.removeAllRanges(); s.addRange(r); m.textContent="Texto selecionado. Use copiar do seu celular."; };
+      try { navigator.clipboard.writeText(t).then(()=>{ m.textContent="Mensagem copiada. Agora é só colar no direct."; }, sel); } catch(e){ sel(); } };
+    $("#editar").onclick=()=>{ window._op=Object.assign({},F); S.opina=null; save(); renderPanel(); };
+    return;
+  }
+  const f=window._op; if(!$("#f-op")) return;
+  document.querySelectorAll(".nota").forEach(b=>b.onclick=()=>{ f.nota=+b.dataset.n; renderPanel(); });
+  document.querySelectorAll(".pchip").forEach(b=>b.onclick=()=>{ f.prox=b.dataset.o; renderPanel(); if(f.prox==="Outra") $("#outra")?.focus(); });
+  $("#achou").addEventListener("input",e=>f.achou=e.target.value);
+  const o=$("#outra"); if(o) o.addEventListener("input",e=>f.outra=e.target.value);
+  $("#f-op").addEventListener("submit",e=>{ e.preventDefault(); if(!f.nota||!f.prox) return; S.opina=Object.assign({enviado:true},f); save(); enviaPlanilha("conclusao",{nota:String(f.nota),achou:f.achou||"",prox:f.prox==="Outra"?(f.outra||"Outra"):f.prox}); if(AUTO_REGISTRO){ S.concluiu=true; save(); } renderPanel(); });
+}
+
+function bind6(){ const b=$("#fim"); if(b) b.onclick=()=>finish(6,10); if(S.feitas[6]) bindCaixinha(); }
+
+const VIEWS = {1:[etapa1,bind1],2:[etapa2,bind2],3:[etapa3,bind3],4:[etapa4,()=>bindQuiz(4,Q4,20)],5:[etapa5,()=>bindQuiz(5,Q5,20)],6:[etapa6,bind6]};
+const SUBS = {1:"Conheça o caso e aceite o contrato",2:"Estação 1 do workshop: o dado saindo do município",3:"Monte o caminho que o dado percorre",4:"Estação 2 do workshop: o dado avaliado pelo Ministério",5:"Escolha como resolver o caso",6:"Estação 3 do workshop: o dado chegando à RNDS"};
+
+function renderPanel(){
+  const e = ETAPAS[S.atual-1]; const st=status(e.id);
+  let body;
+  if (!S.nome && e.id!==1) body = `<p>Assine seu contrato no topo da página para começar.</p>`;
+  else if (st==="locked") body = lockView(e);
+  else body = VIEWS[e.id][0]();
+  $("#panel").innerHTML = head(e,SUBS[e.id]) + `<div class="panel-body">${body}</div>`;
+  if (st==="locked"){
+    const f=$("#f-cod"); if(f) f.addEventListener("submit",ev=>{ ev.preventDefault(); const m=$("#cod-msg");
+      if (hashCod(norm($("#cod").value))===e.codigo){ S.abertas.push(e.id); save(); renderAll(); }
+      else { m.className="msg err"; m.textContent="Código não confere. Confira nos Stories de "+e.dia+" e digite de novo."; } });
+  } else if (S.nome || e.id===1) VIEWS[e.id][1]();
+  encaixaVideo();
+}
+
+function renderMural(){
+  const v=MURAL.votos, tv=v.A+v.B+v.C;
+  const linha=(l,t,n)=>`<div><span>${l}. ${t}</span><span>${tv?Math.round(n/tv*100):0}%</span><div class="bar"><i style="width:${tv?n/tv*100:0}%"></i></div></div>`;
+  $("#mural").innerHTML = `
+  <div class="mcard"><small>Recado da coordenação</small><p>${MURAL.recado}</p><p style="color:var(--muted);font-size:13px">Atualizado: ${MURAL.atualizado}</p></div>
+  <div class="mcard"><small>Meta do mutirão · quinta</small><p>${MURAL.caixinhaMeta} respostas na caixinha liberam o código da estação 4.</p>${barra(MURAL.caixinhaAtual,MURAL.caixinhaMeta)}</div>
+  <div class="mcard"><small>Decisão do time · sexta</small>${tv?`<div class="vote">${linha("A","Corrigir e reenviar",v.A)}${linha("B","Esperar o próximo mês",v.B)}${linha("C","Apagar e lançar de novo",v.C)}</div><p style="color:var(--muted);font-size:13px">${tv} votos na enquete</p>`:`<p>A enquete abre na sexta, 07/11. O resultado do time aparece aqui.</p>`}</div>`;
+}
+
+function renderAll(){ renderWho(); renderTrack(); renderPanel(); renderMural(); }
+renderAll();
+$("#fechar").onclick=closeMission; $("#voltar").onclick=closeMission;
+document.addEventListener("keydown",e=>{ if(e.key==="Escape" && !$("#sheet").hidden) closeMission(); });
+</script>
+
+</body>
+</html>
