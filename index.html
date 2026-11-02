@@ -367,20 +367,20 @@ a.cta:focus-visible{outline:3px solid #fff;outline-offset:3px}
 <script>
 /* ===== Mural: atualizado pela Verineida a cada dia ===== */
 const MURAL = {
-  atualizado: "aguardando o início da missão (seg, 03/11)",
+  atualizado: "aguardando o início da missão (ter, 03/11)",
   caixinhaMeta: 30,
   caixinhaAtual: 0,
   votos: { A: 0, B: 0, C: 0 },
-  recado: "A missão começa segunda, 03/11. Ative as notificações dos Stories para não perder os códigos."
+  recado: "A missão começa terça, 03/11. Ative as notificações dos Stories para não perder os códigos."
 };
 
 const ETAPAS = [
-  { id:1, dia:"Seg 03/11", nome:"A contratação", codigo:null },
-  { id:2, dia:"Ter 04/11", nome:"A ficha na UBS", codigo:"ahbjcm" },
-  { id:3, dia:"Qua 05/11", nome:"Saindo do município", codigo:"1gwyhh4" },
-  { id:4, dia:"Qui 06/11", nome:"O relatório do Ministério", codigo:"11ik3r2", mutirao:true },
-  { id:5, dia:"Sex 07/11", nome:"Decisão do time", codigo:"125njl5" },
-  { id:6, dia:"Sáb 08/11", nome:"Chegada à RNDS", codigo:"1p591ac" }
+  { id:1, dia:"Ter 03/11", nome:"A contratação", codigo:null },
+  { id:2, dia:"Qua 04/11", nome:"A ficha na UBS", codigo:"ahbjcm" },
+  { id:3, dia:"Qui 05/11", nome:"Saindo do município", codigo:"1gwyhh4" },
+  { id:4, dia:"Sex 06/11", nome:"O relatório do Ministério", codigo:"11ik3r2", mutirao:true },
+  { id:5, dia:"Sáb 07/11", nome:"Decisão do time", codigo:"125njl5" },
+  { id:6, dia:"Dom 08/11", nome:"Chegada à RNDS", codigo:"1p591ac" }
 ];
 
 const KEY = "caminho-do-dado-v6";
@@ -704,7 +704,7 @@ function finish(id, pts){
 }
 
 function lockView(e){
-  const mut = e.mutirao ? `<div class="mutirao"><h3>Etapa de mutirão</h3><p class="msg">O código só sai quando o time inteiro bater a meta: <b>${MURAL.caixinhaMeta} respostas</b> na caixinha dos Stories de quinta. Responda e chame um colega da APS para o seu time.</p>${barra(MURAL.caixinhaAtual, MURAL.caixinhaMeta)}</div>` : "";
+  const mut = e.mutirao ? `<div class="mutirao"><h3>Etapa de mutirão</h3><p class="msg">O código só sai quando o time inteiro bater a meta: <b>${MURAL.caixinhaMeta} respostas</b> na caixinha dos Stories de sexta. Responda e chame um colega da APS para o seu time.</p>${barra(MURAL.caixinhaAtual, MURAL.caixinhaMeta)}</div>` : "";
   return `<div class="lockbox"><h3>Estação bloqueada</h3><p class="msg">O código desta estação aparece nos Stories de ${e.dia}. Digite aqui para abrir.</p>
     <form class="row" id="f-cod"><label for="cod" hidden>Código</label><input id="cod" placeholder="Código do dia" autocomplete="off"><button class="btn" type="submit">Abrir estação</button></form><p class="msg" id="cod-msg"></p></div>${mut}`;
 }
@@ -929,8 +929,8 @@ function renderMural(){
   const linha=(l,t,n)=>`<div><span>${l}. ${t}</span><span>${tv?Math.round(n/tv*100):0}%</span><div class="bar"><i style="width:${tv?n/tv*100:0}%"></i></div></div>`;
   $("#mural").innerHTML = `
   <div class="mcard"><small>Recado da coordenação</small><p>${MURAL.recado}</p><p style="color:var(--muted);font-size:13px">Atualizado: ${MURAL.atualizado}</p></div>
-  <div class="mcard"><small>Meta do mutirão · quinta</small><p>${MURAL.caixinhaMeta} respostas na caixinha liberam o código da estação 4.</p>${barra(MURAL.caixinhaAtual,MURAL.caixinhaMeta)}</div>
-  <div class="mcard"><small>Decisão do time · sexta</small>${tv?`<div class="vote">${linha("A","Corrigir e reenviar",v.A)}${linha("B","Esperar o próximo mês",v.B)}${linha("C","Apagar e lançar de novo",v.C)}</div><p style="color:var(--muted);font-size:13px">${tv} votos na enquete</p>`:`<p>A enquete abre na sexta, 07/11. O resultado do time aparece aqui.</p>`}</div>`;
+  <div class="mcard"><small>Meta do mutirão · sexta</small><p>${MURAL.caixinhaMeta} respostas na caixinha liberam o código da estação 4.</p>${barra(MURAL.caixinhaAtual,MURAL.caixinhaMeta)}</div>
+  <div class="mcard"><small>Decisão do time · sábado</small>${tv?`<div class="vote">${linha("A","Corrigir e reenviar",v.A)}${linha("B","Esperar o próximo mês",v.B)}${linha("C","Apagar e lançar de novo",v.C)}</div><p style="color:var(--muted);font-size:13px">${tv} votos na enquete</p>`:`<p>A enquete abre no sábado, 07/11. O resultado do time aparece aqui.</p>`}</div>`;
 }
 
 function renderAll(){ renderWho(); renderTrack(); renderPanel(); renderMural(); }
